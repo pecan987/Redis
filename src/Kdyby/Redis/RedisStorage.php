@@ -268,7 +268,11 @@ class RedisStorage implements \Kdyby\Redis\IMultiReadStorage
 		if ($this->journal) {
 			$keys = $this->journal->clean($conds);
 			if ($keys) {
-				$this->client->send('del', $keys);
+				$unserializedKeys = [];
+				foreach ($keys as $key) {
+					$unserializedKeys[] = unserialize($key, ['allowed_classes' => true]);
+				}
+				$this->client->send('del', $unserializedKeys);
 			}
 		}
 	}
