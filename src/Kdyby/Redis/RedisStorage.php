@@ -14,7 +14,7 @@ use Kdyby;
 use Nette;
 use Nette\Caching\Cache;
 use Nette\Caching\Storages\IJournal;
-
+use Tracy\Debugger;
 
 
 /**
@@ -290,11 +290,16 @@ class RedisStorage implements IMultiReadStorage
 		if ($this->journal) {
 			$keys = $this->journal->clean($conds);
 			if ($keys) {
-				$unserializedKeys = [];
+				$finalKeys = [];
 				foreach ($keys as $key) {
-					$unserializedKeys[] = unserialize($key, ['allowed_classes' => true]);
+					$finalKey = @unserialize($key, ['allowed_classes' => true]);
+					if($finalKey !== false) {
+						$finalKeys[] = $finalKey;
+					} else {
+						$finalKeys[] = $key;
+					}
 				}
-				$this->client->send('del', $unserializedKeys);
+				$this->client->send('del', $finalKeys);
 			}
 		}
 	}
