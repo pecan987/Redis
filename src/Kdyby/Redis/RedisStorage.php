@@ -288,8 +288,13 @@ class RedisStorage implements IMultiReadStorage
 
 		// cleaning using journal
 		if ($this->journal) {
-			if ($keys = $this->journal->clean($conds, $this)) {
-				$this->client->send('del', $keys);
+			$keys = $this->journal->clean($conds);
+			if ($keys) {
+				$unserializedKeys = [];
+				foreach ($keys as $key) {
+					$unserializedKeys[] = unserialize($key, ['allowed_classes' => true]);
+				}
+				$this->client->send('del', $unserializedKeys);
 			}
 		}
 	}
